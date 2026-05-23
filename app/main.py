@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.config import get_settings
-from app.routers import telemetry
+from app.routers import telemetry, summary
 
 settings = get_settings()
 
@@ -12,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(telemetry.router)
+app.include_router(summary.router)
 
 
 @app.get("/health", tags=["system"])
