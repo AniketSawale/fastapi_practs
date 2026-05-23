@@ -1,0 +1,47 @@
+from datetime import datetime, timezone
+from enum import Enum
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class DeviceStatus(str, Enum):
+    """Operational status reported by a device."""
+
+    OK = "ok"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+class TelemetryReadingIn(BaseModel):
+    """Incoming telemetry payload. device_id comes from the URL path."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="UTC timestamp when the reading was taken.",
+    )
+    lumens: float = Field(
+        ge=0, le=20_000, description="Light output in lumens.")
+    power_watts: float = Field(
+        ge=0, le=500, description="Power draw in watts.")
+    temperature_c: float = Field(
+        ge=40, le=120, description="Device temperature in Cels.")
+    motion_detected: bool = Field(
+        default=False, description="Wheather motion was detected.")
+    status: DeviceStatus = Field(
+        default=DeviceStatus.OK, description="Reported operational status.")
+
+
+class TelemetryReadingOut(TelemetryReadingIn):
+    """Telemetry reading as returned by the API. Add device_id."""
+    device_id: str = Field(
+        description="Identifier of the device this reading belongs to.")
+
+
+class DeviceSummary(BaseModel):
+    """Lightweight summary of a known device."""
+
+    device_id: str
+    reading_count: int
+    last_seen: datetime | None = None
